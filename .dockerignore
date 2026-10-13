@@ -1,0 +1,11 @@
+.git
+.gradle
+build
+out
+.tooling
+node_modules
+.env
+.env.*
+data
+uploads
+*.log

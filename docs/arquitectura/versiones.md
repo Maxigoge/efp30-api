@@ -11,6 +11,12 @@ adelante. Por eso Java 21 y Gradle 8.14.4 quedan dentro del rango soportado.
 PostgreSQL 18.6 es el último parche publicado de la rama 18 al fijar este
 proyecto.
 
+La imagen multietapa usa las etiquetas fijadas
+`eclipse-temurin:21.0.12.1_1-jdk-noble` y
+`eclipse-temurin:21.0.12.1_1-jre-noble`; ambas comparten parche de Java 21 y
+Ubuntu Noble. Las etiquetas se verifican en el catálogo oficial de
+[Eclipse Temurin en Docker Hub](https://hub.docker.com/_/eclipse-temurin/tags?name=21).
+Actualizá ambas al mismo parche al revisar seguridad.
 Las versiones compatibles de Spring Framework, Spring Security, Spring Data,
 Hibernate, Spring Session, Flyway y el driver PostgreSQL se resuelven desde el
 BOM de Spring Boot 3.5.16. No se sobrescriben individualmente. El plugin de

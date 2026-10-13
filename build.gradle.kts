@@ -44,3 +44,6 @@ tasks.withType<Test>().configureEach {
     useJUnitPlatform()
     systemProperty("user.timezone", "America/Argentina/Buenos_Aires")
 }
+tasks.bootJar {
+    archiveFileName.set("efp30-api.jar")
+}

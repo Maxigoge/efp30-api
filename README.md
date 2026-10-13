@@ -13,7 +13,7 @@ alcance.
 | A1 | Proyecto Java, PostgreSQL, Flyway y health | Completo |
 | A2 | Lectura pública | Completo |
 | A3 | Sesiones, edición y medios | Completo |
-| A4 | Integración, documentación e imagen Docker | Pendiente |
+| A4 | Integración, documentación e imagen Docker | Preparado; build requiere Docker |
 
 ## Contrato y mock
 
@@ -128,6 +128,15 @@ El primer administrador se crea mediante el procedimiento idempotente de
 docs/operaciones/bootstrap-admin.md; ningún usuario ni contraseña inicial se
 guarda en Git.
 
+### Docker e integración A4
+
+`Dockerfile` compila, ejecuta pruebas y empaqueta `efp30-api.jar` en una etapa
+Java 21; la etapa final usa JRE Java 21, UID/GID 10001 y puerto 8080. Los bytes
+quedan en un volumen externo bajo `MEDIA_ROOT`; PostgreSQL se administra fuera
+de la imagen. `docs/operaciones/despliegue.md` describe redes separadas para
+Cloudflare Tunnel, Nginx, API y base, el proxy `/api/v1/`, bootstrap y probes.
+La imagen queda lista para construir con `docker build`; este entorno no dispone
+de Docker para ejecutar ese último comando.
 ## Alcance v1
 
 Incluye noticias, cursos, familias profesionales, calendario, información
