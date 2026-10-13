@@ -7,6 +7,9 @@ un cambio incompatible requiere documentar el motivo, preparar una nueva
 versión y coordinar la actualización de ambos consumidores antes de liberar la
 API. No se modifica el contrato desde los repositorios frontend.
 
+La versión inicial que deben copiar los consumidores está fijada en el commit
+`b71daa7405e485d54a2fa02fb6d93d558f7afdc1`.
+
 Validación:
 
     npm run validate:openapi
