@@ -25,6 +25,9 @@ spring:
       table-name: SPRING_SESSION
   jackson:
     time-zone: America/Argentina/Buenos_Aires
+efp30:
+  media:
+    root: ${MEDIA_ROOT:./data/media}
 server:
   port: ${PORT:8080}
   forward-headers-strategy: framework

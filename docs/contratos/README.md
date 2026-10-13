@@ -15,6 +15,11 @@ se usa mientras la fila institucional inicial no esté configurada. Los
 consumidores que necesiten ese caso deben copiar la revisión v1 que contiene
 esta respuesta y guardar el SHA de esa copia.
 
+La revisión OpenAPI que contiene el cambio está en el commit
+`6762208576e3d3bea8d1a7a094d8097ac0ba7a12`; los consumidores que ya copiaron
+el contrato inicial pueden seguir usando esa copia si no requieren tratar el
+estado 503 de institución.
+
 Validación:
 
     npm run validate:openapi

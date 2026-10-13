@@ -11,7 +11,7 @@ alcance.
 |---|---|---|
 | A0 | Contrato OpenAPI, ejemplos, fixtures y mock HTTP | Completo |
 | A1 | Proyecto Java, PostgreSQL, Flyway y health | Completo |
-| A2 | Lectura pública | Pendiente |
+| A2 | Lectura pública | Completo |
 | A3 | Sesiones, edición y medios | Pendiente |
 | A4 | Integración, documentación e imagen Docker | Pendiente |
 
@@ -72,6 +72,28 @@ En PowerShell, con JDK 21 disponible:
 valida con PostgreSQL 18.6 mediante Testcontainers cuando hay Docker; en un
 entorno sin runtime de contenedores esa prueba queda omitida explícitamente.
 
+## Lectura pública A2
+
+Las rutas `/api/v1/public` consultan noticias, cursos, familias, eventos,
+información institucional, carrusel y medios. Las listas usan paginación base
+cero (`page=0`, `size=20`, máximo 100) y los filtros definidos en OpenAPI.
+Noticias, cursos y eventos se ordenan de forma estable; el calendario usa
+intervalos semiabiertos `[from,to)` y serializa instantes con el offset de
+`America/Argentina/Buenos_Aires`.
+
+Las consultas públicas filtran borradores y archivos en SQL. Cursos requieren
+familia activa. La portada de curso se obtiene de su `coverMediaId`, separada
+de la galería; la galería y carrusel omiten fotos o medios deshabilitados,
+privados y no fotográficos. El contenido binario se resuelve bajo
+`MEDIA_ROOT` (por defecto `./data/media`) con claves opacas y sin rutas físicas
+en respuestas.
+
+Las pruebas HTTP usan fixtures ficticios sobre H2 para cubrir filtros,
+paginación, aislamiento editorial, calendario, carrusel, archivo público y
+404 uniforme para medios privados o deshabilitados. La fila institucional no
+se inventa: hasta que ADMIN la configure, la lectura pública responde 503 según
+el contrato vigente.
+
 El esquema inicial persiste usuarios ADMIN/EDITOR, contenido editorial,
 familias, cursos y requisitos, galerías y selección de carrusel, eventos con
 instantes y zona IANA, información institucional, metadatos de medios y tablas
@@ -79,9 +101,8 @@ de Spring Session JDBC. La portada del curso está en una FK independiente de
 las fotos de galería. No incluye entidades de campus.
 
 La información institucional real y sus datos de contacto todavía deben
-facilitarse antes de poder completar las lecturas públicas y bootstrapear esa
-fila de contenido; los fixtures de A0 son ficticios y no se insertan en
-producción.
+facilitarse para completar la página pública; hasta entonces, A2 devuelve 503 y
+no inserta datos ficticios. ADMIN podrá configurar esa fila en A3.
 
 El primer administrador se crea mediante un procedimiento operativo idempotente
 documentado en A3; ningún usuario ni contraseña inicial se guarda en Git.

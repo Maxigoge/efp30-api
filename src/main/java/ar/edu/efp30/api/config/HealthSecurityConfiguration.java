@@ -13,6 +13,7 @@ public class HealthSecurityConfiguration {
         return http
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/actuator/health/**").permitAll()
+                        .requestMatchers("/api/v1/public/**").permitAll()
                         .anyRequest().denyAll())
                 .build();
     }
