@@ -86,3 +86,20 @@ CREATE TABLE institution (
     phones VARCHAR(4000) NOT NULL,
     social_links VARCHAR(4000) NOT NULL
 );
+
+CREATE TABLE admin_user (
+    id UUID PRIMARY KEY,
+    display_name VARCHAR(120) NOT NULL,
+    email VARCHAR(254) NOT NULL,
+    password_hash VARCHAR(100) NOT NULL,
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    version BIGINT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE admin_user_role (
+    user_id UUID NOT NULL,
+    role VARCHAR(16) NOT NULL,
+    PRIMARY KEY (user_id, role)
+);

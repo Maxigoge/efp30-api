@@ -12,7 +12,7 @@ alcance.
 | A0 | Contrato OpenAPI, ejemplos, fixtures y mock HTTP | Completo |
 | A1 | Proyecto Java, PostgreSQL, Flyway y health | Completo |
 | A2 | Lectura pública | Completo |
-| A3 | Sesiones, edición y medios | Pendiente |
+| A3 | Sesiones, edición y medios | En curso |
 | A4 | Integración, documentación e imagen Docker | Pendiente |
 
 ## Contrato y mock
@@ -104,8 +104,9 @@ La información institucional real y sus datos de contacto todavía deben
 facilitarse para completar la página pública; hasta entonces, A2 devuelve 503 y
 no inserta datos ficticios. ADMIN podrá configurar esa fila en A3.
 
-El primer administrador se crea mediante un procedimiento operativo idempotente
-documentado en A3; ningún usuario ni contraseña inicial se guarda en Git.
+El primer administrador se crea mediante el procedimiento idempotente de
+docs/operaciones/bootstrap-admin.md; ningún usuario ni contraseña inicial se
+guarda en Git.
 
 ## Alcance v1
 

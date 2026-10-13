@@ -10,13 +10,20 @@ public class PublicApiException extends RuntimeException {
     private final String title;
     private final String code;
     private final List<FieldError> fieldErrors;
+    private final long retryAfterSeconds;
 
     private PublicApiException(HttpStatus status, String title, String code, String detail, List<FieldError> fieldErrors) {
+        this(status, title, code, detail, fieldErrors, 0);
+    }
+
+    private PublicApiException(HttpStatus status, String title, String code, String detail,
+                               List<FieldError> fieldErrors, long retryAfterSeconds) {
         super(detail);
         this.status = status;
         this.title = title;
         this.code = code;
         this.fieldErrors = List.copyOf(fieldErrors);
+        this.retryAfterSeconds = retryAfterSeconds;
     }
 
     public static PublicApiException badRequest(String field, String message) {
@@ -27,6 +34,20 @@ public class PublicApiException extends RuntimeException {
     public static PublicApiException notFound() {
         return new PublicApiException(HttpStatus.NOT_FOUND, "No encontrado", "NOT_FOUND",
                 "El recurso no existe o no está disponible.", List.of());
+    }
+
+    public static PublicApiException unauthorized() {
+        return new PublicApiException(HttpStatus.UNAUTHORIZED, "No autenticado", "UNAUTHENTICATED",
+                "La sesión no es válida.", List.of());
+    }
+
+    public static PublicApiException conflict(String code, String detail) {
+        return new PublicApiException(HttpStatus.CONFLICT, "Conflicto", code, detail, List.of());
+    }
+
+    public static PublicApiException rateLimited(long retryAfterSeconds) {
+        return new PublicApiException(HttpStatus.TOO_MANY_REQUESTS, "Demasiados intentos", "RATE_LIMITED",
+                "Esperá antes de volver a intentar.", List.of(), retryAfterSeconds);
     }
 
     public static PublicApiException institutionNotConfigured() {
@@ -48,6 +69,10 @@ public class PublicApiException extends RuntimeException {
 
     public List<FieldError> fieldErrors() {
         return fieldErrors;
+    }
+
+    public long retryAfterSeconds() {
+        return retryAfterSeconds;
     }
 
     public record FieldError(String field, String message) {
