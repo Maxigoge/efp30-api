@@ -10,6 +10,11 @@ API. No se modifica el contrato desde los repositorios frontend.
 La versión inicial que deben copiar los consumidores está fijada en el commit
 `b71daa7405e485d54a2fa02fb6d93d558f7afdc1`.
 
+La respuesta 503 de `GET /public/institucion` se agregó de forma compatible:
+se usa mientras la fila institucional inicial no esté configurada. Los
+consumidores que necesiten ese caso deben copiar la revisión v1 que contiene
+esta respuesta y guardar el SHA de esa copia.
+
 Validación:
 
     npm run validate:openapi

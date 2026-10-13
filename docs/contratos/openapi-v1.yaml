@@ -248,6 +248,7 @@ paths:
         - Lectura pública
       operationId: getPublicInstitution
       summary: Leer información y contacto
+      description: Responde 503 hasta que la información institucional inicial haya sido configurada.
       responses:
         "200":
           description: Datos públicos sin version interna.
@@ -267,6 +268,8 @@ paths:
                     url: https://example.com/efp30
         "429":
           $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
         "500":
           $ref: "#/components/responses/InternalError"
   /public/eventos:
@@ -2156,6 +2159,20 @@ components:
             detail: No se pudo completar.
             instance: /api/v1/public/noticias
             code: INTERNAL_ERROR
+            fieldErrors: []
+    ServiceUnavailable:
+      description: Información pública institucional todavía no configurada.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+          example:
+            type: about:blank
+            title: Información no disponible
+            status: 503
+            detail: La información institucional todavía no está configurada.
+            instance: /api/v1/public/institucion
+            code: INSTITUTION_NOT_CONFIGURED
             fieldErrors: []
   schemas:
     Problem:
