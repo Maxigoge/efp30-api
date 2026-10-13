@@ -20,7 +20,7 @@ alcance.
 El documento oficial está en docs/contratos/openapi-v1.yaml. Las decisiones,
 compatibilidad y convenciones se explican en docs/contratos/README.md. Cada
 frontend debe copiar el contrato desde un SHA de este repositorio y registrar
-ese SHA junto a su copia.
+ese SHA junto a su copia. La revisión v1 vigente recomendada es `86682e93ab108f2484a75aa73f4888ecc72555b7`.
 
 Los fixtures de fixtures/editorial.json y los ejemplos JSON son ficticios.
 El mock local responde bajo el mismo prefijo que usará el backend:
@@ -104,6 +104,15 @@ La información institucional real y sus datos de contacto todavía deben
 facilitarse para completar la página pública; hasta entonces, A2 devuelve 503 y
 no inserta datos ficticios. ADMIN podrá configurar esa fila en A3.
 
+### Edición administrativa A3b
+
+ADMIN y EDITOR pueden crear, editar, listar, publicar y archivar noticias,
+cursos y eventos; también gestionan familias y galerías. Los cambios comparan
+`version` y responden `409 VERSION_CONFLICT` cuando el registro cambió. La
+portada del curso se mantiene aparte de su galería. La institución se configura
+sólo por ADMIN y responde 503 hasta el primer `PUT` con `version=0`. Los eventos
+validan el offset con `America/Argentina/Buenos_Aires`; día completo usa
+medianoche local y fin exclusivo.
 El primer administrador se crea mediante el procedimiento idempotente de
 docs/operaciones/bootstrap-admin.md; ningún usuario ni contraseña inicial se
 guarda en Git.

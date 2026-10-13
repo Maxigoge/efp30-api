@@ -18,10 +18,10 @@ esta respuesta y guardar el SHA de esa copia.
 La misma respuesta aplica a `GET /admin/institucion` hasta que ADMIN configure
 la fila inicial. `PUT /admin/institucion` la crea al recibir `version=0`.
 
-La revisión OpenAPI que contiene el cambio está en el commit
-`6762208576e3d3bea8d1a7a094d8097ac0ba7a12`; los consumidores que ya copiaron
-el contrato inicial pueden seguir usando esa copia si no requieren tratar el
-estado 503 de institución.
+El commit `6762208576e3d3bea8d1a7a094d8097ac0ba7a12` agregó el 503 de
+`GET /public/institucion`. El commit `86682e93ab108f2484a75aa73f4888ecc72555b7` agregó
+el mismo caso para `GET /admin/institucion`. Esta última es la copia recomendada
+para ambos consumidores; los cambios son compatibles y acumulativos.
 
 Validación:
 
