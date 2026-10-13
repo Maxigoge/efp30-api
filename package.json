@@ -1,0 +1,14 @@
+{
+  "name": "efp30-api-contract-mocks",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "mock": "node mocks/server.mjs",
+    "test:mock": "node --test mocks/server.test.mjs",
+    "validate:openapi": "npx --yes @redocly/cli@2.63.0 lint docs/contratos/openapi-v1.yaml"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
