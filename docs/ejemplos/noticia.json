@@ -1,0 +1,38 @@
+{
+  "crearBorrador": {
+    "request": {
+      "slug": "muestra-anual",
+      "title": "Muestra anual",
+      "summary": "Resumen de ejemplo para una noticia.",
+      "bodyMarkdown": "Texto en **Markdown** sin HTML crudo.",
+      "coverMediaId": null,
+      "category": "Institucional",
+      "featured": false
+    },
+    "response": {
+      "id": "11111111-1111-4111-8111-111111111102",
+      "slug": "muestra-anual",
+      "title": "Muestra anual",
+      "summary": "Resumen de ejemplo para una noticia.",
+      "bodyMarkdown": "Texto en **Markdown** sin HTML crudo.",
+      "coverMediaId": null,
+      "category": "Institucional",
+      "featured": false,
+      "status": "DRAFT",
+      "publishedAt": null,
+      "createdAt": "2026-10-11T10:00:00-03:00",
+      "updatedAt": "2026-10-11T10:00:00-03:00",
+      "version": 0
+    }
+  },
+  "publicacion": {
+    "request": {"version": 0},
+    "responseState": "PUBLISHED",
+    "publicRoute": "/api/v1/public/noticias/muestra-anual"
+  },
+  "archivo": {
+    "request": {"version": 1},
+    "responseState": "ARCHIVED",
+    "publicRouteStatusAfterArchive": 404
+  }
+}

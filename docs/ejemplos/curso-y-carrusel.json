@@ -1,0 +1,42 @@
+{
+  "courseId": "33333333-3333-4333-8333-333333333301",
+  "portadaTarjeta": {
+    "coverMediaId": "66666666-6666-4666-8666-666666666603",
+    "coverUrl": "/api/v1/public/media/66666666-6666-4666-8666-666666666603"
+  },
+  "galeria": {
+    "version": 1,
+    "photos": [
+      {
+        "id": "55555555-5555-4555-8555-555555555501",
+        "mediaId": "66666666-6666-4666-8666-666666666601",
+        "alt": "Tablero de prácticas eléctricas",
+        "position": 1,
+        "enabled": true,
+        "showOnHomepage": true
+      },
+      {
+        "id": null,
+        "mediaId": "66666666-6666-4666-8666-666666666604",
+        "alt": "Práctica supervisada",
+        "position": 2,
+        "enabled": true,
+        "showOnHomepage": false
+      }
+    ]
+  },
+  "carruselPublico": {
+    "items": [
+      {
+        "id": "55555555-5555-4555-8555-555555555501",
+        "courseId": "33333333-3333-4333-8333-333333333301",
+        "courseSlug": "electricidad-domiciliaria",
+        "courseTitle": "Electricidad domiciliaria",
+        "mediaId": "66666666-6666-4666-8666-666666666601",
+        "imageUrl": "/api/v1/public/media/66666666-6666-4666-8666-666666666601",
+        "alt": "Tablero de prácticas eléctricas",
+        "position": 1
+      }
+    ]
+  }
+}
