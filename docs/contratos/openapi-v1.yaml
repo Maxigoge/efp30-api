@@ -1333,6 +1333,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
         "500":
           $ref: "#/components/responses/InternalError"
     put:
@@ -2161,7 +2163,7 @@ components:
             code: INTERNAL_ERROR
             fieldErrors: []
     ServiceUnavailable:
-      description: Información pública institucional todavía no configurada.
+      description: Información institucional todavía no configurada.
       content:
         application/problem+json:
           schema:
