@@ -41,6 +41,15 @@ public class PublicApiException extends RuntimeException {
                 "La sesión no es válida.", List.of());
     }
 
+    public static PublicApiException payloadTooLarge() {
+        return new PublicApiException(HttpStatus.PAYLOAD_TOO_LARGE, "Archivo demasiado grande", "FILE_TOO_LARGE",
+                "El archivo supera el límite permitido.", List.of());
+    }
+
+    public static PublicApiException unsupportedMediaType() {
+        return new PublicApiException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Tipo de archivo no permitido", "UNSUPPORTED_MEDIA_TYPE",
+                "El contenido no coincide con los formatos aceptados.", List.of());
+    }
     public static PublicApiException conflict(String code, String detail) {
         return new PublicApiException(HttpStatus.CONFLICT, "Conflicto", code, detail, List.of());
     }

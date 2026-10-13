@@ -12,7 +12,7 @@ alcance.
 | A0 | Contrato OpenAPI, ejemplos, fixtures y mock HTTP | Completo |
 | A1 | Proyecto Java, PostgreSQL, Flyway y health | Completo |
 | A2 | Lectura pública | Completo |
-| A3 | Sesiones, edición y medios | En curso |
+| A3 | Sesiones, edición y medios | Completo |
 | A4 | Integración, documentación e imagen Docker | Pendiente |
 
 ## Contrato y mock
@@ -113,6 +113,17 @@ portada del curso se mantiene aparte de su galería. La institución se configur
 sólo por ADMIN y responde 503 hasta el primer `PUT` con `version=0`. Los eventos
 validan el offset con `America/Argentina/Buenos_Aires`; día completo usa
 medianoche local y fin exclusivo.
+
+### Medios A3c
+
+La carga multipart acepta sólo JPEG, PNG y WebP hasta 5 MiB, o PDF hasta 10 MiB.
+El servidor compara la firma binaria con la extensión y el tipo declarado,
+rechaza rutas del cliente y guarda cada objeto con una clave UUID más extensión
+bajo `MEDIA_ROOT`; PostgreSQL conserva metadatos y SHA-256. La lectura pública
+requiere visibilidad PUBLIC y medio habilitado. Los PRIVATE sólo se descargan
+con sesión ADMIN/EDITOR, como adjunto, con `nosniff` y `Cache-Control: private,
+no-store`. Al volver privado un medio referenciado, la API responde 409.
+
 El primer administrador se crea mediante el procedimiento idempotente de
 docs/operaciones/bootstrap-admin.md; ningún usuario ni contraseña inicial se
 guarda en Git.

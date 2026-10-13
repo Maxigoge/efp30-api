@@ -11,6 +11,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.List;
@@ -62,6 +63,11 @@ public class ApiExceptionHandler {
                 "VALIDATION_ERROR", fieldErrors, request);
     }
 
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    ResponseEntity<ApiProblem> handleMaxUpload(MaxUploadSizeExceededException exception,HttpServletRequest request) {
+        return problem(HttpStatus.PAYLOAD_TOO_LARGE,"Archivo demasiado grande","El archivo supera el límite permitido.",
+                "FILE_TOO_LARGE",List.of(),request);
+    }
     @ExceptionHandler(Exception.class)
     ResponseEntity<ApiProblem> handleUnexpected(Exception exception, HttpServletRequest request) {
         log.error("Unhandled API failure for {}", request.getRequestURI(), exception);

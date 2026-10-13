@@ -65,7 +65,7 @@ public class AdminEditorialService {
     public NewsAdmin createNews(NewsCreateRequest request, AdminPrincipal actor) {
         validateMarkdown(request.bodyMarkdown(), "bodyMarkdown");
         UUID id = UUID.randomUUID();
-        validateOptionalImage(request.coverMediaId());
+         validateOptionalImage(request.coverMediaId());
         try {
             jdbc.update("INSERT INTO news (id,slug,title,summary,body_markdown,cover_media_id,category,featured,status,"
                             + "version,created_by,updated_by) VALUES (?,?,?,?,?,?,?,?,'DRAFT',0,?,?)",
@@ -81,7 +81,7 @@ public class AdminEditorialService {
         NewsAdmin current = getNews(id);
         checkVersion(current.version(), request.version());
         validateMarkdown(request.bodyMarkdown(), "bodyMarkdown");
-        validateOptionalImage(request.coverMediaId());
+         validateOptionalImage(request.coverMediaId());
         int changed = jdbc.update("UPDATE news SET title=?,summary=?,body_markdown=?,cover_media_id=?,category=?,"
                         + "featured=?,version=version+1,updated_at=now(),updated_by=? WHERE id=? AND version=?",
                 request.title().trim(), request.summary().trim(), request.bodyMarkdown(), request.coverMediaId(),
@@ -133,7 +133,8 @@ public class AdminEditorialService {
     public CourseAdmin updateCourse(UUID id, CourseUpdateRequest request, AdminPrincipal actor) {
         CourseAdmin current = getCourse(id); checkVersion(current.version(), request.version());
         validateMarkdown(request.bodyMarkdown(), "bodyMarkdown"); requireFamily(request.familyId());
-        validateOptionalImage(request.coverMediaId());
+        if ("PUBLISHED".equals(current.status())) requireActiveFamily(request.familyId());
+         validateOptionalImage(request.coverMediaId());
         int changed = jdbc.update("UPDATE course SET title=?,family_id=?,summary=?,body_markdown=?,duration_hours=?,"
                         + "modality=?,enrollment_status=?,cover_media_id=?,version=version+1,updated_at=now(),updated_by=? "
                         + "WHERE id=? AND version=?",
@@ -425,6 +426,9 @@ public class AdminEditorialService {
     private long versionOf(Object value) { if(value instanceof NewsAdmin x)return x.version();if(value instanceof CourseAdmin x)return x.version();return ((EventAdmin)value).version(); }
     private String statusOf(Object value) { if(value instanceof NewsAdmin x)return x.status();if(value instanceof CourseAdmin x)return x.status();return ((EventAdmin)value).status(); }
 }
+
+
+
 
 
 
