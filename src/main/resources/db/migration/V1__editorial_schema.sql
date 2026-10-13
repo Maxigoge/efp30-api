@@ -66,7 +66,7 @@ CREATE TABLE course (
     summary VARCHAR(400) NOT NULL,
     body_markdown TEXT NOT NULL CHECK (length(body_markdown) BETWEEN 1 AND 50000),
     duration_hours INTEGER CHECK (duration_hours BETWEEN 1 AND 10000),
-    modality VARCHAR(16) NOT NULL CHECK (modality IN ('ON_SITE', 'DISTANCE', 'HYBRID')),
+    modality VARCHAR(16) NOT NULL CHECK (modality IN ('PRESENTIAL', 'ONLINE', 'HYBRID')),
     enrollment_status VARCHAR(16) NOT NULL CHECK (enrollment_status IN ('CONSULTATION', 'OPEN', 'CLOSED')),
     cover_media_id UUID REFERENCES media(id) ON DELETE SET NULL,
     status VARCHAR(16) NOT NULL DEFAULT 'DRAFT' CHECK (status IN ('DRAFT', 'PUBLISHED', 'ARCHIVED')),
