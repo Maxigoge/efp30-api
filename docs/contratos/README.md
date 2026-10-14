@@ -7,21 +7,11 @@ un cambio incompatible requiere documentar el motivo, preparar una nueva
 versión y coordinar la actualización de ambos consumidores antes de liberar la
 API. No se modifica el contrato desde los repositorios frontend.
 
-La versión inicial que deben copiar los consumidores está fijada en el commit
-`b71daa7405e485d54a2fa02fb6d93d558f7afdc1`.
-
-La respuesta 503 de `GET /public/institucion` se agregó de forma compatible:
-se usa mientras la fila institucional inicial no esté configurada. Los
-consumidores que necesiten ese caso deben copiar la revisión v1 que contiene
-esta respuesta y guardar el SHA de esa copia.
-
-La misma respuesta aplica a `GET /admin/institucion` hasta que ADMIN configure
-la fila inicial. `PUT /admin/institucion` la crea al recibir `version=0`.
-
-El commit `6762208576e3d3bea8d1a7a094d8097ac0ba7a12` agregó el 503 de
-`GET /public/institucion`. El commit `86682e93ab108f2484a75aa73f4888ecc72555b7` agregó
-el mismo caso para `GET /admin/institucion`. Esta última es la copia recomendada
-para ambos consumidores; los cambios son compatibles y acumulativos.
+La revisión v1 recomendada para copiar por ambos consumidores está fijada en
+el commit `86682e93ab108f2484a75aa73f4888ecc72555b7`. Contiene la
+respuesta 503 compatible de `GET /public/institucion` mientras la fila
+inicial no esté configurada y la misma respuesta para
+`GET /admin/institucion`. `PUT /admin/institucion` la crea con `version=0`.
 
 Validación:
 
