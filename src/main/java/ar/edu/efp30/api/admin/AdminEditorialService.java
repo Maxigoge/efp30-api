@@ -1,6 +1,8 @@
 package ar.edu.efp30.api.admin;
 
+import ar.edu.efp30.api.db.DatabaseIds;
 import ar.edu.efp30.api.auth.AdminPrincipal;
+import ar.edu.efp30.api.db.DatabaseTimes;
 import ar.edu.efp30.api.publicapi.PublicApiException;
 import ar.edu.efp30.api.publicapi.PublicContentDtos.Page;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -13,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -98,7 +99,7 @@ public class AdminEditorialService {
         if (familyId != null) { where.append(" AND c.family_id=?"); args.add(familyId); }
         Page<UUID> ids = page("SELECT c.id FROM course c" + where + " ORDER BY c.title ASC,c.id ASC",
                 "SELECT COUNT(*) FROM course c" + where, args, page, size,
-                (rs, row) -> rs.getObject("id", UUID.class));
+                (rs, row) -> DatabaseIds.read(rs, "id"));
         return new Page<>(ids.items().stream().map(this::getCourse).toList(), page, size,
                 ids.totalItems(), ids.totalPages());
     }
@@ -186,7 +187,7 @@ public class AdminEditorialService {
     public CoursePhotosResponse getCoursePhotos(UUID courseId) {
         CourseAdmin course = getCourse(courseId);
         List<CoursePhotoInput> photos = jdbc.query("SELECT id,media_id,alt,position,enabled,show_on_homepage FROM course_photo WHERE course_id=? ORDER BY position ASC,id ASC",
-                (rs,row) -> new CoursePhotoInput(rs.getObject("id",UUID.class),rs.getObject("media_id",UUID.class),
+                (rs,row) -> new CoursePhotoInput(DatabaseIds.read(rs, "id"),DatabaseIds.read(rs, "media_id"),
                         rs.getString("alt"),rs.getInt("position"),rs.getBoolean("enabled"),rs.getBoolean("show_on_homepage")),courseId);
         return new CoursePhotosResponse(courseId,course.version(),photos);
     }
@@ -296,18 +297,18 @@ public class AdminEditorialService {
     @Transactional
     public InstitutionAdmin updateInstitution(InstitutionUpdateRequest request, AdminPrincipal actor) {
         validateSocialLinks(request.socialLinks());
-        String phones=json(request.phones()), links=json(request.socialLinks()), jsonCast=isPostgres()?"::jsonb":"";
+        String phones=json(request.phones()), links=json(request.socialLinks());
         List<Long> existing=jdbc.query("SELECT version FROM institution WHERE id=1",(rs,row)->rs.getLong(1));
         if(existing.isEmpty()) {
             if(request.version()!=0) throw versionConflict();
             try {
                 jdbc.update("INSERT INTO institution (id,name,description,address,email,phones,social_links,version,updated_by) "
-                                + "VALUES (1,?,?,?,?,?"+jsonCast+",?"+jsonCast+",0,?)",request.name().trim(),request.description(),
+                                + "VALUES (1,?,?,?,?,?,?,0,?)",request.name().trim(),request.description(),
                         request.address().trim(),request.email().trim().toLowerCase(Locale.ROOT),phones,links,actor.id());
             } catch(DuplicateKeyException exception) { throw versionConflict(); }
         } else {
             checkVersion(existing.getFirst(),request.version());
-            int changed=jdbc.update("UPDATE institution SET name=?,description=?,address=?,email=?,phones=?"+jsonCast+",social_links=?"+jsonCast+", "
+            int changed=jdbc.update("UPDATE institution SET name=?,description=?,address=?,email=?,phones=?,social_links=?, "
                             + "version=version+1,updated_at=now(),updated_by=? WHERE id=1 AND version=?",
                     request.name().trim(),request.description(),request.address().trim(),
                     request.email().trim().toLowerCase(Locale.ROOT),phones,links,actor.id(),request.version());
@@ -324,26 +325,26 @@ public class AdminEditorialService {
     }
 
     private NewsAdmin news(ResultSet rs,int row) throws SQLException {
-        return new NewsAdmin(rs.getObject("id",UUID.class),rs.getString("slug"),rs.getString("title"),
-                rs.getString("summary"),rs.getString("body_markdown"),rs.getObject("cover_media_id",UUID.class),
+        return new NewsAdmin(DatabaseIds.read(rs, "id"),rs.getString("slug"),rs.getString("title"),
+                rs.getString("summary"),rs.getString("body_markdown"),DatabaseIds.read(rs, "cover_media_id"),
                 rs.getString("category"),rs.getBoolean("featured"),rs.getString("status"),argentina(rs,"published_at"),
                 argentina(rs,"created_at"),argentina(rs,"updated_at"),rs.getLong("version"));
     }
     private CourseAdmin course(ResultSet rs,int row) throws SQLException {
-        return new CourseAdmin(rs.getObject("id",UUID.class),rs.getString("slug"),rs.getString("title"),
-                rs.getObject("family_id",UUID.class),rs.getString("summary"),rs.getString("body_markdown"),List.of(),
+        return new CourseAdmin(DatabaseIds.read(rs, "id"),rs.getString("slug"),rs.getString("title"),
+                DatabaseIds.read(rs, "family_id"),rs.getString("summary"),rs.getString("body_markdown"),List.of(),
                 rs.getObject("duration_hours",Integer.class),rs.getString("modality"),rs.getString("enrollment_status"),
-                rs.getObject("cover_media_id",UUID.class),rs.getString("status"),argentina(rs,"published_at"),
+                DatabaseIds.read(rs, "cover_media_id"),rs.getString("status"),argentina(rs,"published_at"),
                 argentina(rs,"created_at"),argentina(rs,"updated_at"),rs.getLong("version"));
     }
     private EventAdmin event(ResultSet rs,int row) throws SQLException {
-        return new EventAdmin(rs.getObject("id",UUID.class),rs.getString("slug"),rs.getString("title"),
+        return new EventAdmin(DatabaseIds.read(rs, "id"),rs.getString("slug"),rs.getString("title"),
                 rs.getString("description"),argentina(rs,"starts_at"),argentina(rs,"ends_at"),rs.getString("timezone"),
                 rs.getString("location"),rs.getBoolean("all_day"),rs.getString("status"),argentina(rs,"published_at"),
                 argentina(rs,"created_at"),argentina(rs,"updated_at"),rs.getLong("version"));
     }
     private FamilyAdmin family(ResultSet rs,int row) throws SQLException {
-        return new FamilyAdmin(rs.getObject("id",UUID.class),rs.getString("slug"),rs.getString("name"),
+        return new FamilyAdmin(DatabaseIds.read(rs, "id"),rs.getString("slug"),rs.getString("name"),
                 rs.getBoolean("active"),rs.getLong("version"));
     }
     private InstitutionAdmin institution(ResultSet rs,int row) throws SQLException {
@@ -356,7 +357,7 @@ public class AdminEditorialService {
         List<T> items=jdbc.query(sql,mapper,args); if(items.isEmpty()) throw PublicApiException.notFound(); return items.getFirst();
     }
     private OffsetDateTime argentina(ResultSet rs,String column) throws SQLException {
-        OffsetDateTime value=rs.getObject(column,OffsetDateTime.class); return value==null?null:value.atZoneSameInstant(ARGENTINA).toOffsetDateTime();
+        return DatabaseTimes.argentina(rs,column);
     }
     private void replaceRequirements(UUID id,List<String> requirements) {
         jdbc.update("DELETE FROM course_requirement WHERE course_id=?",id);
@@ -397,11 +398,6 @@ public class AdminEditorialService {
             catch(IllegalArgumentException ex) { throw PublicApiException.badRequest("socialLinks["+i+"].url","La URL debe usar HTTPS."); }
         }
     }
-    private boolean isPostgres() {
-        try(Connection connection=jdbc.getDataSource().getConnection()) {
-            return connection.getMetaData().getDatabaseProductName().toLowerCase(Locale.ROOT).contains("postgresql");
-        } catch(SQLException exception) { throw new IllegalStateException("No se pudo detectar el tipo de base de datos.",exception); }
-    }
     private String json(Object value) { try{return mapper.writeValueAsString(value);}catch(JsonProcessingException ex){throw new IllegalStateException(ex);} }
     private <T> T readJson(String json,TypeReference<T> type) { try{return mapper.readValue(json,type);}catch(JsonProcessingException ex){throw new IllegalStateException(ex);} }
     private void validatePage(int page,int size) {
@@ -416,7 +412,7 @@ public class AdminEditorialService {
         if(status!=null&&!status.isBlank()){where.append(" AND ").append(column).append("=?");args.add(status);}
     }
     private void addQuery(StringBuilder where,List<Object> args,String q,String first,String second) {
-        if(q!=null&&!q.isBlank()) { validateFilter(q,"q",120); where.append(" AND (").append(first).append(" ILIKE ? OR ").append(second).append(" ILIKE ?)"); String v="%"+q.trim()+"%"; args.add(v); args.add(v); }
+        if(q!=null&&!q.isBlank()) { validateFilter(q,"q",120); where.append(" AND (LOWER(").append(first).append(") LIKE LOWER(?) OR LOWER(").append(second).append(") LIKE LOWER(?))"); String v="%"+q.trim()+"%"; args.add(v); args.add(v); }
     }
     private void validateFilter(String value,String name,int max) {
         if(value.length()>max) throw PublicApiException.badRequest(name,"Supera el máximo de caracteres permitido.");

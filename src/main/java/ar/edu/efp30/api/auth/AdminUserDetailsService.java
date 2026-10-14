@@ -1,5 +1,6 @@
 package ar.edu.efp30.api.auth;
 
+import ar.edu.efp30.api.db.DatabaseIds;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -23,7 +24,7 @@ public class AdminUserDetailsService implements UserDetailsService {
                         SELECT id, display_name, email, password_hash, enabled
                         FROM admin_user WHERE lower(email) = ?
                         """,
-                (rs, row) -> new AdminPrincipal(rs.getObject("id", java.util.UUID.class),
+                (rs, row) -> new AdminPrincipal(DatabaseIds.read(rs, "id"),
                         rs.getString("display_name"), rs.getString("email"), rs.getString("password_hash"),
                         List.of(), rs.getBoolean("enabled")), email);
         if (users.isEmpty()) {

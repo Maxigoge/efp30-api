@@ -10,7 +10,7 @@ alcance.
 | Hito | Alcance | Estado |
 |---|---|---|
 | A0 | Contrato OpenAPI, ejemplos, fixtures y mock HTTP | Completo |
-| A1 | Proyecto Java, PostgreSQL, Flyway y health | Completo |
+| A1 | Proyecto Java, MySQL, Flyway y health | Completo |
 | A2 | Lectura pública | Completo |
 | A3 | Sesiones, edición y medios | Completo |
 | A4 | Integración, documentación e imagen Docker | Preparado; build requiere Docker |
@@ -32,31 +32,34 @@ Los comandos de verificación de A0 son:
     npm run validate:openapi
     npm run test:mock
 
-El mock escucha sólo en 127.0.0.1:4010 por defecto. No conecta a PostgreSQL,
+El mock escucha sólo en 127.0.0.1:4010 por defecto. No conecta a MySQL,
 no persiste los cambios y no es un servicio de producción.
 
 ## Stack de API
 
-La implementación se inicializa en A1 con Java 21, Spring Boot, Spring Security,
-PostgreSQL y Flyway. Las versiones precisas de plugins, dependencias, driver e
-imagen de base se fijarán juntas en ese hito y se comprobarán contra Java 21.
+La implementación usa Java 21, Spring Boot, Spring Security, MySQL 8.4.11 y
+Flyway. Las versiones precisas de plugins, dependencias, driver e imagen de
+base se fijaron juntas y están documentadas en
+docs/arquitectura/versiones.md.
 
 La topología prevista es Cloudflare Tunnel → gateway Nginx → API. Los
-frontends llaman /api/v1 en su propio host. PostgreSQL y los archivos sólo
-serán accesibles desde la API. No se despliega desde este repositorio.
+frontends llaman /api/v1 en su propio host. MySQL y los archivos sólo
+serán accesibles desde la API. Tomcat sólo acepta cabeceras `X-Forwarded-*`
+desde el gateway configurado por `TRUSTED_PROXY_PATTERN`; el valor fijado es
+`^172\.30\.33\.2$`. No se despliega desde este repositorio.
 
 ## Backend A1
 
-Se fijaron Java 21, Spring Boot 3.5.16, Gradle 8.14.4 y PostgreSQL 18.6; los
-componentes Spring, Flyway y el driver JDBC siguen el BOM de Spring Boot. El
+Se fijaron Java 21, Spring Boot 3.5.16, Gradle 8.14.4 y MySQL 8.4.11; los
+componentes Spring, Flyway y Connector/J siguen el BOM de Spring Boot. El
 checksum del wrapper y las referencias de compatibilidad están en
 docs/arquitectura/versiones.md.
 
 La aplicación escucha en 8080 por defecto. Configura `DATABASE_URL`,
-`DATABASE_USERNAME` y `DATABASE_PASSWORD`; Flyway aplica las migraciones al
-arrancar y Hibernate valida el esquema sin modificarlo. No se guardan bytes de
-archivos en PostgreSQL: el esquema conserva sus metadatos y la clave opaca del
-almacenamiento que se implementará en A3.
+`DATABASE_USERNAME` y una de `DATABASE_PASSWORD` o `DATABASE_PASSWORD_FILE`;
+Flyway aplica las migraciones al arrancar y Hibernate valida el esquema sin
+modificarlo. La URL MySQL fija la sesión de base en UTC. No se guardan bytes de
+archivos en MySQL: conserva metadatos y la clave opaca del almacenamiento.
 
 Los probes son `/actuator/health/liveness` y
 `/actuator/health/readiness`. El primero informa vida del proceso; el segundo
@@ -68,9 +71,10 @@ En PowerShell, con JDK 21 disponible:
     .\gradlew.bat test
     .\gradlew.bat bootRun
 
-`test` usa H2 para levantar la aplicación y probar los probes. La migración se
-valida con PostgreSQL 18.6 mediante Testcontainers cuando hay Docker; en un
-entorno sin runtime de contenedores esa prueba queda omitida explícitamente.
+`test` usa H2 para las pruebas HTTP y los probes. `MySqlMigrationTest` valida
+Flyway contra `mysql:8.4.11` mediante Testcontainers cuando hay Docker; sin
+runtime de contenedores, Gradle la omite explícitamente. Este entorno no tiene
+Docker, por lo que la validación contra el servidor 8.4.11 queda pendiente.
 
 ## Lectura pública A2
 
@@ -119,7 +123,7 @@ medianoche local y fin exclusivo.
 La carga multipart acepta sólo JPEG, PNG y WebP hasta 5 MiB, o PDF hasta 10 MiB.
 El servidor compara la firma binaria con la extensión y el tipo declarado,
 rechaza rutas del cliente y guarda cada objeto con una clave UUID más extensión
-bajo `MEDIA_ROOT`; PostgreSQL conserva metadatos y SHA-256. La lectura pública
+bajo `MEDIA_ROOT`; MySQL conserva metadatos y SHA-256. La lectura pública
 requiere visibilidad PUBLIC y medio habilitado. Los PRIVATE sólo se descargan
 con sesión ADMIN/EDITOR, como adjunto, con `nosniff` y `Cache-Control: private,
 no-store`. Al volver privado un medio referenciado, la API responde 409.
@@ -132,8 +136,8 @@ guarda en Git.
 
 `Dockerfile` compila, ejecuta pruebas y empaqueta `efp30-api.jar` en una etapa
 Java 21; la etapa final usa JRE Java 21, UID/GID 10001 y puerto 8080. Los bytes
-quedan en un volumen externo bajo `MEDIA_ROOT`; PostgreSQL se administra fuera
-de la imagen. `docs/operaciones/despliegue.md` describe redes separadas para
+quedan en un volumen externo bajo `MEDIA_ROOT`; MySQL se administra fuera de la
+imagen. `docs/operaciones/despliegue.md` describe redes separadas para
 Cloudflare Tunnel, Nginx, API y base, el proxy `/api/v1/`, bootstrap y probes.
 La imagen queda lista para construir con `docker build`; este entorno no dispone
 de Docker para ejecutar ese último comando.

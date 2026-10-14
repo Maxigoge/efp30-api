@@ -1,5 +1,6 @@
 package ar.edu.efp30.api.admin;
 
+import ar.edu.efp30.api.db.DatabaseIds;
 import ar.edu.efp30.api.publicapi.PublicApiException;
 import ar.edu.efp30.api.publicapi.PublicContentDtos.Page;
 import org.springframework.dao.DuplicateKeyException;
@@ -110,7 +111,7 @@ public class AdminMediaService {
     }
 
     private MediaAdmin media(ResultSet rs) throws SQLException {
-        UUID id=rs.getObject("id",UUID.class);String visibility=rs.getString("visibility");boolean enabled=rs.getBoolean("enabled");
+        UUID id=DatabaseIds.read(rs, "id");String visibility=rs.getString("visibility");boolean enabled=rs.getBoolean("enabled");
         return new MediaAdmin(id,rs.getString("original_name"),rs.getString("mime_type"),rs.getLong("size_bytes"),
                 visibility,enabled,"PUBLIC".equals(visibility)&&enabled?"/api/v1/public/media/"+id:null,rs.getLong("version"));
     }

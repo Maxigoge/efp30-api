@@ -1,5 +1,7 @@
 package ar.edu.efp30.api.publicapi;
 
+import ar.edu.efp30.api.db.DatabaseIds;
+import ar.edu.efp30.api.db.DatabaseTimes;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,7 +12,6 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -20,7 +21,6 @@ import static ar.edu.efp30.api.publicapi.PublicContentDtos.*;
 @Repository
 public class PublicContentRepository {
 
-    private static final ZoneId ARGENTINA = ZoneId.of("America/Argentina/Buenos_Aires");
     private static final String PUBLIC_IMAGE = "m.mime_type IN ('image/jpeg', 'image/png', 'image/webp')";
     private static final String COVER_URL = "CASE WHEN m.id IS NOT NULL AND m.enabled AND m.visibility = 'PUBLIC' "
             + "AND " + PUBLIC_IMAGE + " THEN CONCAT('/api/v1/public/media/', m.id) ELSE NULL END";
@@ -37,7 +37,7 @@ public class PublicContentRepository {
         StringBuilder where = new StringBuilder(" WHERE n.status = 'PUBLISHED'");
         List<Object> args = new ArrayList<>();
         if (query != null && !query.isBlank()) {
-            where.append(" AND (n.title ILIKE ? ESCAPE '!' OR n.summary ILIKE ? ESCAPE '!')");
+            where.append(" AND (LOWER(n.title) LIKE LOWER(?) ESCAPE '!' OR LOWER(n.summary) LIKE LOWER(?) ESCAPE '!')");
             String pattern = "%" + escapeLike(query.trim()) + "%";
             args.add(pattern);
             args.add(pattern);
@@ -62,7 +62,7 @@ public class PublicContentRepository {
                 + "n.category, n.featured, n.published_at FROM news n "
                 + "LEFT JOIN media m ON m.id = n.cover_media_id "
                 + "WHERE n.slug = ? AND n.status = 'PUBLISHED'";
-        return findOne(sql, (rs, row) -> new News(rs.getObject("id", UUID.class), rs.getString("slug"),
+        return findOne(sql, (rs, row) -> new News(DatabaseIds.read(rs, "id"), rs.getString("slug"),
                 rs.getString("title"), rs.getString("summary"), rs.getString("body_markdown"),
                 rs.getString("cover_url"), rs.getString("category"), rs.getBoolean("featured"),
                 argentina(rs, "published_at")), slug);
@@ -72,7 +72,7 @@ public class PublicContentRepository {
         StringBuilder where = new StringBuilder(" WHERE c.status = 'PUBLISHED' AND f.active = TRUE");
         List<Object> args = new ArrayList<>();
         if (query != null && !query.isBlank()) {
-            where.append(" AND (c.title ILIKE ? ESCAPE '!' OR c.summary ILIKE ? ESCAPE '!')");
+            where.append(" AND (LOWER(c.title) LIKE LOWER(?) ESCAPE '!' OR LOWER(c.summary) LIKE LOWER(?) ESCAPE '!')");
             String pattern = "%" + escapeLike(query.trim()) + "%";
             args.add(pattern);
             args.add(pattern);
@@ -98,8 +98,8 @@ public class PublicContentRepository {
                 + "c.enrollment_status, " + COVER_URL + " AS cover_url" + from
                 + " WHERE c.slug = ? AND c.status = 'PUBLISHED' AND f.active = TRUE";
         CourseDetailRow row = findOne(sql, (rs, index) -> new CourseDetailRow(
-                rs.getObject("id", UUID.class), rs.getString("slug"), rs.getString("title"),
-                new FamilyReference(rs.getObject("family_id", UUID.class), rs.getString("family_slug"),
+                DatabaseIds.read(rs, "id"), rs.getString("slug"), rs.getString("title"),
+                new FamilyReference(DatabaseIds.read(rs, "family_id"), rs.getString("family_slug"),
                         rs.getString("family_name")),
                 rs.getString("summary"), rs.getString("body_markdown"),
                 rs.getObject("duration_hours", Integer.class), rs.getString("modality"),
@@ -116,8 +116,8 @@ public class PublicContentRepository {
                           AND m.mime_type IN ('image/jpeg', 'image/png', 'image/webp')
                         ORDER BY cp.position ASC, cp.id ASC
                         """,
-                (rs, index) -> new CoursePhoto(rs.getObject("id", UUID.class),
-                        mediaUrl(rs.getObject("media_id", UUID.class)), rs.getString("alt"), rs.getInt("position")),
+                (rs, index) -> new CoursePhoto(DatabaseIds.read(rs, "id"),
+                        mediaUrl(DatabaseIds.read(rs, "media_id")), rs.getString("alt"), rs.getInt("position")),
                 row.id());
         return new Course(row.id(), row.slug(), row.title(), row.family(), row.summary(), row.bodyMarkdown(),
                 requirements, row.durationHours(), row.modality(), row.enrollmentStatus(), row.coverUrl(), photos);
@@ -132,7 +132,7 @@ public class PublicContentRepository {
                         )
                         ORDER BY f.sort_order ASC, f.name ASC, f.id ASC
                         """,
-                (rs, row) -> new Family(rs.getObject("id", UUID.class), rs.getString("slug"), rs.getString("name")));
+                (rs, row) -> new Family(DatabaseIds.read(rs, "id"), rs.getString("slug"), rs.getString("name")));
         return new FamilyList(items);
     }
 
@@ -161,8 +161,8 @@ public class PublicContentRepository {
                         ORDER BY cp.position ASC, c.id ASC, cp.id ASC
                         """,
                 (rs, row) -> {
-                    UUID mediaId = rs.getObject("media_id", UUID.class);
-                    return new CarouselItem(rs.getObject("id", UUID.class), rs.getObject("course_id", UUID.class),
+                    UUID mediaId = DatabaseIds.read(rs, "media_id");
+                    return new CarouselItem(DatabaseIds.read(rs, "id"), DatabaseIds.read(rs, "course_id"),
                             rs.getString("course_slug"), rs.getString("course_title"), mediaId,
                             mediaUrl(mediaId), rs.getString("alt"), rs.getInt("position"));
                 });
@@ -189,7 +189,7 @@ public class PublicContentRepository {
                         FROM media
                         WHERE id = ? AND visibility = 'PUBLIC' AND enabled = TRUE
                         """,
-                (rs, row) -> new MediaFile(rs.getObject("id", UUID.class), rs.getString("object_key"),
+                (rs, row) -> new MediaFile(DatabaseIds.read(rs, "id"), rs.getString("object_key"),
                         rs.getString("original_name"), rs.getString("mime_type"), rs.getLong("size_bytes")), id);
     }
 
@@ -205,28 +205,27 @@ public class PublicContentRepository {
     }
 
     private NewsSummary newsSummary(ResultSet rs, int row) throws SQLException {
-        return new NewsSummary(rs.getObject("id", UUID.class), rs.getString("slug"), rs.getString("title"),
+        return new NewsSummary(DatabaseIds.read(rs, "id"), rs.getString("slug"), rs.getString("title"),
                 rs.getString("summary"), rs.getString("cover_url"), rs.getString("category"),
                 rs.getBoolean("featured"), argentina(rs, "published_at"));
     }
 
     private CourseSummary courseSummary(ResultSet rs, int row) throws SQLException {
-        return new CourseSummary(rs.getObject("id", UUID.class), rs.getString("slug"), rs.getString("title"),
-                new FamilyReference(rs.getObject("family_id", UUID.class), rs.getString("family_slug"),
+        return new CourseSummary(DatabaseIds.read(rs, "id"), rs.getString("slug"), rs.getString("title"),
+                new FamilyReference(DatabaseIds.read(rs, "family_id"), rs.getString("family_slug"),
                         rs.getString("family_name")),
                 rs.getString("summary"), rs.getObject("duration_hours", Integer.class), rs.getString("modality"),
                 rs.getString("enrollment_status"), rs.getString("cover_url"));
     }
 
     private Event event(ResultSet rs, int row) throws SQLException {
-        return new Event(rs.getObject("id", UUID.class), rs.getString("slug"), rs.getString("title"),
+        return new Event(DatabaseIds.read(rs, "id"), rs.getString("slug"), rs.getString("title"),
                 rs.getString("description"), argentina(rs, "starts_at"), argentina(rs, "ends_at"),
                 rs.getString("timezone"), rs.getString("location"), rs.getBoolean("all_day"));
     }
 
     private OffsetDateTime argentina(ResultSet rs, String column) throws SQLException {
-        OffsetDateTime value = rs.getObject(column, OffsetDateTime.class);
-        return value.atZoneSameInstant(ARGENTINA).toOffsetDateTime();
+        return DatabaseTimes.argentina(rs, column);
     }
 
     private <T> T findOne(String sql, RowMapper<T> mapper, Object... args) {

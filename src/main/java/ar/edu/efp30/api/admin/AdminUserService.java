@@ -1,5 +1,7 @@
 package ar.edu.efp30.api.admin;
 
+import ar.edu.efp30.api.db.DatabaseIds;
+import ar.edu.efp30.api.db.DatabaseTimes;
 import ar.edu.efp30.api.publicapi.PublicApiException;
 import ar.edu.efp30.api.publicapi.PublicContentDtos.Page;
 import org.springframework.dao.DuplicateKeyException;
@@ -11,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -23,7 +24,6 @@ import static ar.edu.efp30.api.admin.AdminUserDtos.*;
 public class AdminUserService {
 
     private static final Set<String> ALLOWED_ROLES = Set.of("ADMIN", "EDITOR");
-    private static final ZoneId ARGENTINA = ZoneId.of("America/Argentina/Buenos_Aires");
     private final JdbcTemplate jdbc;
     private final PasswordEncoder passwordEncoder;
 
@@ -52,7 +52,7 @@ public class AdminUserService {
         queryArgs.add((long) page * size);
         List<UUID> ids = jdbc.query("SELECT u.id" + from + where
                         + " ORDER BY u.created_at DESC, u.id ASC LIMIT ? OFFSET ?",
-                (rs, row) -> rs.getObject("id", UUID.class), queryArgs.toArray());
+                (rs, row) -> DatabaseIds.read(rs, "id"), queryArgs.toArray());
         List<User> users = ids.stream().map(this::get).toList();
         long pages = total == 0 ? 0 : (total + size - 1) / size;
         return new Page<>(users, page, size, total, pages);
@@ -63,7 +63,7 @@ public class AdminUserService {
                         SELECT id, display_name, email, enabled, created_at, version
                         FROM admin_user WHERE id = ?
                         """,
-                (rs, row) -> new UserRow(rs.getObject("id", UUID.class), rs.getString("display_name"),
+                (rs, row) -> new UserRow(DatabaseIds.read(rs, "id"), rs.getString("display_name"),
                         rs.getString("email"), rs.getBoolean("enabled"), argentina(rs), rs.getLong("version")), id);
         if (rows.isEmpty()) {
             throw PublicApiException.notFound();
@@ -169,7 +169,7 @@ public class AdminUserService {
     }
 
     private OffsetDateTime argentina(ResultSet rs) throws SQLException {
-        return rs.getObject("created_at", OffsetDateTime.class).atZoneSameInstant(ARGENTINA).toOffsetDateTime();
+        return DatabaseTimes.argentina(rs, "created_at");
     }
 
     private void validatePage(int page, int size) {

@@ -2,7 +2,7 @@ spring:
   application:
     name: efp30-api
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/efp30}
+    url: ${DATABASE_URL:jdbc:mysql://localhost:3306/efp30?connectionTimeZone=%2B00%3A00&forceConnectionTimeZoneToSession=true&preserveInstants=true}
     username: ${DATABASE_USERNAME:efp30}
     password: ${DATABASE_PASSWORD:}
     hikari:
@@ -36,7 +36,14 @@ efp30:
     root: ${MEDIA_ROOT:./data/media}
 server:
   port: ${PORT:8080}
-  forward-headers-strategy: framework
+  forward-headers-strategy: native
+  tomcat:
+    remoteip:
+      internal-proxies: "${TRUSTED_PROXY_PATTERN:^172\\.30\\.33\\.2$}"
+      remote-ip-header: X-Forwarded-For
+      protocol-header: X-Forwarded-Proto
+      host-header: X-Forwarded-Host
+      port-header: X-Forwarded-Port
   servlet:
     session:
       timeout: 30m

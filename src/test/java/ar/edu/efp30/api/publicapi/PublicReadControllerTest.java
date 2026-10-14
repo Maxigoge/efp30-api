@@ -6,12 +6,22 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @TestPropertySource(properties = "efp30.media.root=build/test-media")
+@Import(PublicReadControllerTest.ProxyTestConfiguration.class)
 class PublicReadControllerTest {
 
     private static final UUID NEWS_PUBLISHED = uuid("11111111-1111-4111-8111-111111111101");
@@ -111,6 +122,21 @@ class PublicReadControllerTest {
                 "2026-10-21T00:00:00-03:00", "2026-10-21T02:00:00-03:00", false, "PUBLISHED");
         addEvent(EVENT_DRAFT, "evento-privado", "Evento privado", "No debe aparecer.",
                 "2026-10-20T10:00:00-03:00", "2026-10-20T11:00:00-03:00", false, "DRAFT");
+    }
+
+    @Test
+    void ignoresForwardedHeadersFromAnUntrustedPeer() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("X-Forwarded-For", "203.0.113.40");
+        headers.set("X-Forwarded-Proto", "https");
+        headers.set("X-Forwarded-Host", "attacker.example");
+        ResponseEntity<JsonNode> response = http.exchange("/api/v1/public/__proxy-test", HttpMethod.GET,
+                new HttpEntity<>(headers), JsonNode.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().path("scheme").asText()).isEqualTo("http");
+        assertThat(response.getBody().path("serverName").asText()).isNotEqualTo("attacker.example");
+        assertThat(response.getBody().path("remoteAddr").asText()).matches("127\\.0\\.0\\.1|0:0:0:0:0:0:0:1|::1");
     }
 
     @Test
@@ -268,5 +294,22 @@ class PublicReadControllerTest {
 
     private static UUID uuid(String value) {
         return UUID.fromString(value);
+    }
+
+    @TestConfiguration(proxyBeanMethods = false)
+    static class ProxyTestConfiguration {
+        @Bean
+        ProxyTestController proxyTestController() {
+            return new ProxyTestController();
+        }
+    }
+
+    @RestController
+    static class ProxyTestController {
+        @GetMapping("/api/v1/public/__proxy-test")
+        java.util.Map<String, String> requestContext(HttpServletRequest request) {
+            return java.util.Map.of("scheme", request.getScheme(), "serverName", request.getServerName(),
+                    "remoteAddr", request.getRemoteAddr());
+        }
     }
 }

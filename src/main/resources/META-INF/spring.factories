@@ -1,0 +1,2 @@
+org.springframework.boot.env.EnvironmentPostProcessor=\
+ar.edu.efp30.api.config.DatabasePasswordFileEnvironmentPostProcessor
