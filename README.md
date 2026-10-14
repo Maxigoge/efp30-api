@@ -13,7 +13,7 @@ alcance.
 | A1 | Proyecto Java, MySQL, Flyway y health | Completo |
 | A2 | Lectura pública | Completo |
 | A3 | Sesiones, edición y medios | Completo |
-| A4 | Integración, documentación e imagen Docker | Preparado; build requiere Docker |
+| A4 | Integración, documentación e imagen Docker | Implementado; build requiere Docker |
 
 ## Contrato y mock
 
@@ -139,8 +139,9 @@ Java 21; la etapa final usa JRE Java 21, UID/GID 10001 y puerto 8080. Los bytes
 quedan en un volumen externo bajo `MEDIA_ROOT`; MySQL se administra fuera de la
 imagen. `docs/operaciones/despliegue.md` describe redes separadas para
 Cloudflare Tunnel, Nginx, API y base, el proxy `/api/v1/`, bootstrap y probes.
-La imagen queda lista para construir con `docker build`; este entorno no dispone
-de Docker para ejecutar ese último comando.
+La imagen incluye un `HEALTHCHECK` con el JRE contra readiness, para que Compose
+pueda usar `depends_on: condition: service_healthy`. Está lista para construir
+con `docker build`; este entorno no dispone de Docker para ejecutar ese comando.
 ## Alcance v1
 
 Incluye noticias, cursos, familias profesionales, calendario, información

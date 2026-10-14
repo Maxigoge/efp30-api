@@ -11,6 +11,23 @@ etapa y ejecuta el JAR en una imagen JRE. El proceso corre como UID/GID 10001 y
 escucha en 8080. La etiqueta de Temurin queda fijada a la publicación Java
 21.0.12.1_1 sobre Ubuntu Noble; actualizala al revisar nuevos parches.
 
+La imagen declara un `HEALTHCHECK` que consulta
+`http://127.0.0.1:8080/actuator/health/readiness` cada 30 segundos, con timeout
+de 5 segundos, 90 segundos de gracia inicial y tres fallos antes de marcarla
+`unhealthy`. El probe usa `java`, que ya está en la imagen, y una clase
+compilada en la etapa JDK; no depende de curl ni wget. Sólo HTTP 200 es healthy.
+Readiness consulta la base MySQL, por lo que Compose puede esperar a que Flyway
+termine y la conexión esté disponible antes de iniciar el gateway:
+
+    services:
+      gateway:
+        depends_on:
+          efp30-api:
+            condition: service_healthy
+
+El probe es local al contenedor; no publica otro puerto ni cambia el usuario
+10001. Se puede inspeccionar con `docker inspect` sobre `State.Health`.
+
 Construcción local:
 
     docker build -t efp30-api:local .
@@ -105,9 +122,10 @@ Tomcat ignora esos encabezados cuando la conexión no viene de la IP configurada
 en `TRUSTED_PROXY_PATTERN`. Los navegadores llaman `/api/v1` desde el mismo host
 del frontend, por lo que no se configura CORS.
 
-Los probes son `/actuator/health/liveness` y
-`/actuator/health/readiness`; readiness consulta la conexión MySQL. La
-disponibilidad exige una base alcanzable con permisos para migrar y una fila
+Los endpoints son `/actuator/health/liveness` y
+`/actuator/health/readiness`; readiness consulta la conexión MySQL y es el
+endpoint usado por el `HEALTHCHECK` de imagen. La disponibilidad exige una
+base alcanzable con permisos para migrar y una fila
 institucional inicial cargada por ADMIN; la lectura pública de institución
 informa 503 hasta que exista. No se incluye comando de despliegue ni se publica
 esta imagen desde el repositorio.
