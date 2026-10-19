@@ -8,3 +8,8 @@ out/
 uploads/
 data/
 .tooling/
+
+src/main/resources/env.yaml
+**/env.yaml
+**/env.yml
+.idea/

@@ -9,3 +9,6 @@ node_modules
 data
 uploads
 *.log
+**/env.yaml
+**/env.yml
+.idea/
