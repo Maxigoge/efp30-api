@@ -9,12 +9,12 @@ concurrency:
   cancel-in-progress: false
 jobs:
   avisar:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Crear token temporal limitado a Actions de infraestructura
         id: app-token
-        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510
         with:
           app-id: ${{ vars.EFP30_DISPATCH_APP_ID }}
           private-key: ${{ secrets.EFP30_DISPATCH_PRIVATE_KEY }}
@@ -26,7 +26,7 @@ jobs:
           DISPATCH_TOKEN: ${{ steps.app-token.outputs.token }}
           SOURCE_REPO: ${{ github.repository }}
           SOURCE_SHA: ${{ github.sha }}
-        shell: python
+        shell: python3 {0}
         run: |
           import json, os, urllib.request
           allowed = {'Maxigoge/efp30-api','Maxigoge/efp30-institucional-web','Maxigoge/efp30-administracion-web'}
