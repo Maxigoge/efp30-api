@@ -1,0 +1,41 @@
+name: Solicitar despliegue DESA
+on:
+  push:
+    branches: [develop]
+permissions:
+  contents: read
+concurrency:
+  group: notify-desa
+  cancel-in-progress: false
+jobs:
+  avisar:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Crear token temporal limitado a Actions de infraestructura
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510
+        with:
+          app-id: ${{ vars.EFP30_DISPATCH_APP_ID }}
+          private-key: ${{ secrets.EFP30_DISPATCH_PRIVATE_KEY }}
+          owner: Maxigoge
+          repositories: efp30-infra
+          permission-actions: write
+      - name: Solicitar build y despliegue de DESA
+        env:
+          DISPATCH_TOKEN: ${{ steps.app-token.outputs.token }}
+          SOURCE_REPO: ${{ github.repository }}
+          SOURCE_SHA: ${{ github.sha }}
+        shell: python3 {0}
+        run: |
+          import json, os, urllib.request
+          allowed = {'Maxigoge/efp30-api','Maxigoge/efp30-institucional-web','Maxigoge/efp30-administracion-web'}
+          repo = os.environ['SOURCE_REPO']
+          if repo not in allowed:
+              raise SystemExit('Repositorio no permitido')
+          body = json.dumps({'ref':'main','inputs':{'source_repo':repo,'source_sha':os.environ['SOURCE_SHA']}}).encode()
+          req = urllib.request.Request('https://api.github.com/repos/Maxigoge/efp30-infra/actions/workflows/release-desa.yml/dispatches', data=body, method='POST', headers={'Authorization':'Bearer '+os.environ['DISPATCH_TOKEN'],'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json'})
+          with urllib.request.urlopen(req, timeout=30) as response:
+              if response.status not in (200,201,204):
+                  raise SystemExit('Dispatch rechazado')
+          print('Solicitud enviada. El resultado del despliegue se consulta en efp30-infra → Actions.')
